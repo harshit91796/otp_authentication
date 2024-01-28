@@ -8,6 +8,9 @@ import auth from '../Firebase.js';
 import './login.css';
 import OtpInput from "otp-input-react";
 import { useNavigate } from 'react-router-dom';
+// import {six,seven} from '../util.js';
+import six from '../../assets/six.jpg'
+import seven from '../../assets/seven.png'
 
 function Login() {
   const [otp, setOtp] = useState('');
@@ -94,11 +97,12 @@ function Login() {
 
   return (
     <div className='loginContainer'>
+     <img className='loginImg' src={seven} />
       <Toaster toastOptions={{ duration: 4000 }} />
       <div className="login">
         <div className="loginLeft">
         <div className="imgDiv">
-                 <img className='loginImg' src="src/assets/6.jpg" />
+                 <img className='loginImg' src={six} />
              </div>
           <div className="login-form">
             <div className='form-input'>

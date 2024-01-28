@@ -1,3 +1,5 @@
+
+
 .loginContainer{
     width: 100vw;
     height:100vh;
@@ -7,7 +9,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-image: url('src/assets/7.png') ; 
+  background-image: url('src/assets/seven.png') ; 
   background-size: cover;
   
 }
@@ -66,6 +68,7 @@
 
   .login-form {
     /* display: flex; */
+    margin-top: 20px;
     flex: 2;
     align-items: center;
     justify-content: center;
