@@ -95,6 +95,7 @@ function Login() {
 
   return (
     <div className='loginContainer'>
+    <img className='loginImg' src={seven} />
       <Toaster toastOptions={{ duration: 4000 }} />
       <div className="login">
         <div className="loginLeft">
