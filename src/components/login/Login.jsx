@@ -11,6 +11,9 @@ import { useNavigate } from 'react-router-dom';
 // import {six,seven} from '../util.js';
 import six from '../../assets/six.jpg'
 import seven from '../../assets/seven.png'
+// import axios from 'axios';
+import axiosInstance from '../axiosInsta';
+import axios from 'axios';
 
 function Login() {
   const [otp, setOtp] = useState('');
@@ -26,13 +29,13 @@ function Login() {
     setLoading(true);
    console.log(phoneNumber)
     try {
-      const response = await fetch('http://localhost:3000/loginOtp', {
+      const response = await fetch ('https://otp-dits.onrender.com/loginOtp', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ phoneNumber: `+${phoneNumber}` }),
-      });
+      })
 
       const data = await response.json();
 
@@ -55,7 +58,7 @@ function Login() {
     setLoading(true);
   
     try {
-      const response = await fetch('http://localhost:3000/verify', {
+      const response = await fetch('https://otp-dits.onrender.com/verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
