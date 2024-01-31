@@ -2,9 +2,9 @@ import React, { useRef, useState } from 'react';
 import { CircularProgress } from '@mui/material';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
-import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
+// import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 import { toast, Toaster } from 'react-hot-toast';
-import auth from '../Firebase.js';
+// import auth from '../Firebase.js';
 import './login.css';
 import OtpInput from "otp-input-react";
 import { useNavigate } from 'react-router-dom';
@@ -19,85 +19,79 @@ function Login() {
   const [showOTP, setShowOTP] = useState(false);
   const [user, setUser] = useState(null);
   const otpInputRef = useRef();
+  const [verificationFailed, setVerificationFailed] = useState(false);
   
   const navigate = useNavigate();
-
-  const onCaptchVerify = () => {
-    if (!window.recaptchaVerifier) {
-      window.recaptchaVerifier = new RecaptchaVerifier(
-        auth, 'recaptcha-container',
-        {
-          size: 'invisible',
-          callback: (response) => {
-            onSignup();
-          },
-          'expired-callback': () => {},
+  const sendOtp = async () => {
+    setLoading(true);
+   console.log(phoneNumber)
+    try {
+      const response = await fetch('http://localhost:3000/loginOtp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      );
+        body: JSON.stringify({ phoneNumber: `+${phoneNumber}` }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log(data); // Assuming the server sends a response like { success: true }
+        setShowOTP(true);
+        toast.success('OTP sent successfully!');
+      } else {
+        toast.error('Failed to send OTP. Please try again.');
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleOtpInputChange = (otp) => {
-    setOtp(otp);
-    // Additional logic if needed
-  };
-
- 
-
-  const onSignup = () => {
+  const handleOtpSubmit = async () => {
     setLoading(true);
-    onCaptchVerify();
-
-    const appVerifier = window.recaptchaVerifier;
-    const formattedPhoneNumber = `+${phoneNumber}`;
-
-    signInWithPhoneNumber(auth, formattedPhoneNumber, appVerifier)
-      .then((confirmationResult) => {
-        window.confirmationResult = confirmationResult;
-        setLoading(false);
-        setShowOTP(true);
-        toast.success('OTP sent successfully!');
-      })
-      .catch((error) => {
-        console.error(error);
-        setLoading(false);
-        toast.error('Failed to send OTP. Please try again.');
+  
+    try {
+      const response = await fetch('http://localhost:3000/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ otp: otp, phoneNumber: `+${phoneNumber}` }),
       });
-  };
-
-  function onOTPVerify(otp) {
-    setLoading(true);
-    window.confirmationResult
-      .confirm(otp)
-      .then(async (res) => {
-        console.log(res);
-        setUser(res.user);
+  
+      const data = await response.json();
+  
+      if (response.ok) {
+        if (data.success && data.status === 'approved') {
+          setLoading(false);
+          navigate('/success');
+        } else {
+          setLoading(false);
+          toast.error('Failed to verify OTP. Please try again.');
+          setOtp('');
+          setVerificationFailed(true);
+        }
+      } else {
         setLoading(false);
-        navigate('/success');
-      })
-      .catch((err) => {
-        console.log(err);
-        setLoading(false);
-      });
-  }
-
-  const handleOtpSubmit = () => {
-    // Handle OTP submission
-
-    // if(user){
-    //   navigate('/success');
-    // }else{
-    //   toast.error('Failed to login. Please try again.');
-    // }
-    console.log(otp);
-    onOTPVerify(otp);
-    // Use confirmationResult.confirm(otp) here
-    
+        
+        toast.error('Failed to verify OTP. Please try again.');
+        setVerificationFailed(true);
+      }
+    } catch (error) {
+      console.error(error);
+      setLoading(false);
+      toast.error('Failed to verify OTP. Please try again.');
+      setVerificationFailed(true);
+    }
   };
+  
 
   return (
     <div className='loginContainer'>
-     <img className='loginImg' src={seven} />
       <Toaster toastOptions={{ duration: 4000 }} />
       <div className="login">
         <div className="loginLeft">
@@ -106,38 +100,33 @@ function Login() {
              </div>
           <div className="login-form">
             <div className='form-input'>
-            <label htmlFor="phone" className='form-label'>Enter Phone </label>
-            <PhoneInput className="form-input" value={phoneNumber} onChange={setPhoneNumber} country={'in'} />
+              <label htmlFor="phone" className='form-label'>Enter Phone </label>
+              <PhoneInput className="form-input" value={phoneNumber} onChange={setPhoneNumber} country={'in'} />
 
-            <div id="recaptcha-container"></div>
-
-            <div className="action-btn">
-              <button className="btn-login" onClick={onSignup} disabled={loading}>
-                {loading ? <CircularProgress size={20} /> : 'Send OTP'}
-              </button>
-            </div>
+              <div className="action-btn">
+                <button className="btn-login" onClick={sendOtp} disabled={loading}>
+                  {loading ? <CircularProgress size={20} /> : 'Send OTP'}
+                </button>
+              </div>
             </div>
 
             {showOTP && (
               <div className='form-input'>
-              <label htmlFor="phone" className='form-label'>Enter OTP </label>
+                <label htmlFor="phone" className='form-label'>Enter OTP </label>
                 <OtpInput
-                value={otp}
-                onChange={setOtp}
-                OTPLength={6}
-                otpType="number"
-                disabled={false}
-                autoFocus
-                className="opt-container "
-                  // onChange={(e) => handleOtpInputChange(e.target.value)}
-                 
+                
+                value={verificationFailed ? otp : otp}
+                  onChange={setOtp}
+                  OTPLength={6}
+                  otpType="number"
+                  disabled={false}
+                  autoFocus
+                  className="opt-container"
+                  inputStyle={{ color: 'white' }}
                 />
-                <button className="btn-login" onClick={handleOtpSubmit}>Verify OTP</button>
-               
+                <button className="btn-login" onClick={handleOtpSubmit}>{loading ? <CircularProgress size={20} /> : 'Verify OTP'}</button>
               </div>
             )}
-
-
           </div>
         </div>
       </div>
